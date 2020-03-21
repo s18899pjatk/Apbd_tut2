@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Apbd_tut2": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\Artem\\Desktop\\4sem\\APBD\\Apbd_tut2\\Apbd_tut2\\Data\\data.csv\" \"C:\\Users\\Artem\\Desktop\\4sem\\APBD\\Apbd_tut2\\Apbd_tut2\\bin\\Debug\\netcoreapp3.1\\results.xml\" xml"
+    }
+  }
+}
