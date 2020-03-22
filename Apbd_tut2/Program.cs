@@ -1,8 +1,12 @@
 ﻿using Apbd_tut2.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using System.Text.Json;
 using System.Xml.Serialization;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Apbd_tut2
 {
@@ -16,20 +20,22 @@ namespace Apbd_tut2
             _sw = new StreamWriter(@"log.txt");
             var path = args.Length > 0 ? args[0] : throw new ArgumentNullException();
             var students = ConvertToSet(path);
-            var activeStudies = new HashSet<ActiveStudies>();
+            var studies = new HashSet<ActiveStudies>();
             var itStudents = new ActiveStudies
             {
                 name = "Computer Science",
                 numberOfStudents = _countIT
+  
             };
-
-            var multimediaStudents = new ActiveStudies
+            studies.Add(itStudents);
+            var mediaStudents = new ActiveStudies
             {
                 name = "New Media Art",
                 numberOfStudents = _countMedia
+
             };
-            activeStudies.Add(itStudents);
-            activeStudies.Add(multimediaStudents);
+            studies.Add(mediaStudents);
+
             Console.WriteLine(String.Concat("num of students: ", students.Count));
 
             if (args[2] == "xml")
@@ -38,7 +44,22 @@ namespace Apbd_tut2
                 FileStream writer = new FileStream(xmlFile, FileMode.Create);
                 XmlSerializer serializer = new XmlSerializer(typeof(HashSet<Student>), new XmlRootAttribute("university"));
                 serializer.Serialize(writer, students);
-               // serializer.Serialize(writer, activeStudies);
+                XmlSerializer studiesSerializer = new XmlSerializer(typeof(HashSet<ActiveStudies>), new XmlRootAttribute("university"));
+                studiesSerializer.Serialize(writer, studies);
+            } else if (args[2] == "json")
+            {
+                var jsonFile = args.Length > 1 ? args[1] : throw new ArgumentNullException();
+                FileStream writer = new FileStream(jsonFile, FileMode.Create);
+                byte[] jsonUtf8Bytes;
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                jsonUtf8Bytes = JsonSerializer.SerializeToUtf8Bytes(students, options);
+                writer.Write(jsonUtf8Bytes);
+
+                jsonUtf8Bytes = JsonSerializer.SerializeToUtf8Bytes(studies, options);
+                writer.Write(jsonUtf8Bytes);
             }
         }
 
@@ -57,21 +78,28 @@ namespace Apbd_tut2
                     while ((line = stream.ReadLine()) != null)
                     {
                         string[] columns = line.Split(',');
-                     //   var param1 = columns[0];
-                      //  var date = DateTime.Parse(columns[5]);
+           
                         if (columns.Length != 9)
                         {
-                            _sw.WriteLine(String.Concat(DateTime.Now, line, " was not added"));
+                            _sw.WriteLine(String.Concat(DateTime.Now, " ", line, " incorrect line"));
+                        }
+
+                         foreach (string v in columns)
+                        {
+                            if (string.IsNullOrEmpty(v))
+                            {
+                                _sw.WriteLine(String.Concat(DateTime.Now, " ", line, " incorrect line"));
+                            }  
                         }
 
                         var student = getStudent(columns);
                         students.Add(student);
+
                         if (!students.Add(student))
                         {
-                            // log to the log.txt
-                            _sw.WriteLine(String.Concat(DateTime.Now, " element was not added"));
+                            _sw.WriteLine(String.Concat(DateTime.Now, line, " ", " was not added becasue of its the same person"));
                         }
-                        Console.WriteLine(student);
+                        // Console.WriteLine(student);
                     }
                 }
             }
@@ -107,7 +135,5 @@ namespace Apbd_tut2
 
             return st;
         }
-
-
     }
 }

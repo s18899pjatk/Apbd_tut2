@@ -64,5 +64,6 @@ namespace Apbd_tut2.Models
         }
 
         public Studies Studies { get; set; }
+
     }
 }
