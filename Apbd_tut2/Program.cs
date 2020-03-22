@@ -8,15 +8,48 @@ namespace Apbd_tut2
 {
     class Program
     {
+        private static StreamWriter _sw;
+        private static int _countIT;
+        private static int _countMedia;
         public static void Main(string[] args)
         {
-            using var sw = new StreamWriter(@"log.txt");
+            _sw = new StreamWriter(@"log.txt");
             var path = args.Length > 0 ? args[0] : throw new ArgumentNullException();
+            var students = ConvertToSet(path);
+            var activeStudies = new HashSet<ActiveStudies>();
+            var itStudents = new ActiveStudies
+            {
+                name = "Computer Science",
+                numberOfStudents = _countIT
+            };
 
+            var multimediaStudents = new ActiveStudies
+            {
+                name = "New Media Art",
+                numberOfStudents = _countMedia
+            };
+            activeStudies.Add(itStudents);
+            activeStudies.Add(multimediaStudents);
+            Console.WriteLine(String.Concat("num of students: ", students.Count));
+
+            if (args[2] == "xml")
+            {
+                var xmlFile = args.Length > 1 ? args[1] : throw new ArgumentNullException();
+                FileStream writer = new FileStream(xmlFile, FileMode.Create);
+                XmlSerializer serializer = new XmlSerializer(typeof(HashSet<Student>), new XmlRootAttribute("university"));
+                serializer.Serialize(writer, students);
+               // serializer.Serialize(writer, activeStudies);
+            }
+        }
+
+        public static HashSet<Student> ConvertToSet(String str)
+        {
+            HashSet<Student> students = new HashSet<Student>(new CustomComparer());
             //Read from file
             try
             {
-                var fi = new FileInfo(path);
+                var fi = new FileInfo(str);
+
                 using (var stream = new StreamReader(fi.OpenRead()))
                 {
                     string line = null;
@@ -24,56 +57,57 @@ namespace Apbd_tut2
                     while ((line = stream.ReadLine()) != null)
                     {
                         string[] columns = line.Split(',');
-                        var param1 = columns[0];
-                        var date = DateTime.Parse(columns[5]);
+                     //   var param1 = columns[0];
+                      //  var date = DateTime.Parse(columns[5]);
                         if (columns.Length != 9)
                         {
-                            sw.WriteLine(String.Concat(DateTime.Now, line, " was not added"));
+                            _sw.WriteLine(String.Concat(DateTime.Now, line, " was not added"));
                         }
-                        Console.WriteLine(line);
+
+                        var student = getStudent(columns);
+                        students.Add(student);
+                        if (!students.Add(student))
+                        {
+                            // log to the log.txt
+                            _sw.WriteLine(String.Concat(DateTime.Now, " element was not added"));
+                        }
+                        Console.WriteLine(student);
                     }
                 }
-            } catch (FileNotFoundException) { Console.WriteLine("File not found!!!"); }
+            }
+            catch (FileNotFoundException) { Console.WriteLine("File not found!!!"); }
+            return students;
+        }
 
-            var students = new HashSet<Student>(new CustomComparer());
-
+        public static Student getStudent(string[] columns)
+        {
             var st = new Student
             {
-                IndexNumber = "s1",
-                FirstName = "Bob",
-                LastName = "Marley",
-                BirthDate = DateTime.Parse("12.01.1991"),
-                Email = "s@test.com",
-                FatherName = "John",
-                MotherName = "Lily"
+                IndexNumber = columns[4],
+                FirstName = columns[0],
+                LastName = columns[1],
+                BirthDate = DateTime.Parse(columns[5]),
+                Email = columns[6],
+                FatherName = columns[7],
+                MotherName = columns[8],
+                Studies = new Studies
+                {
+                    name = columns[2],
+                    mode = columns[3]
+                }
             };
 
-            var st1 = new Student
+            if (columns[2].StartsWith("Informatyka"))
             {
-                IndexNumber = "s1",
-                FirstName = "Bob",
-                LastName = "Marley",
-                BirthDate = DateTime.Parse("12.01.1991"),
-                Email = "s@test.com",
-                FatherName = "John",
-                MotherName = "Lily"
-            };
-
-            students.Add(st);
-            students.Add(st1);
-
-            Console.WriteLine(String.Concat("num of students: ", students.Count));
-
-            if (!students.Add(st1))
+                _countIT++;
+            } else if(columns[2].StartsWith("Sztuka"))
             {
-                // log to the log.txt
-                sw.WriteLine(String.Concat(DateTime.Now, " element was not added"));
+                _countMedia++;
             }
 
-            var xmlFile = args.Length > 1 ? args[1] : throw new ArgumentNullException();
-            FileStream writer = new FileStream(xmlFile, FileMode.Create);
-            XmlSerializer serializer = new XmlSerializer(typeof(HashSet<Student>), new XmlRootAttribute("university"));
-            serializer.Serialize(writer,students);
+            return st;
         }
+
+
     }
 }

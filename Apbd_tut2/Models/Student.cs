@@ -63,5 +63,6 @@ namespace Apbd_tut2.Models
             set { _fatherName = value ?? throw new ArgumentNullException(); }
         }
 
+        public Studies Studies { get; set; }
     }
 }
