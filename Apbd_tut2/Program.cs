@@ -15,12 +15,16 @@ namespace Apbd_tut2
         private static StreamWriter _sw;
         private static int _countIT;
         private static int _countMedia;
+
         public static void Main(string[] args)
         {
             _sw = new StreamWriter(@"log.txt");
             var path = args.Length > 0 ? args[0] : throw new ArgumentNullException();
+            var destFile = args.Length > 1 ? args[1] : throw new ArgumentNullException();
+            var mode = args.Length > 2 ? args[2] : throw new ArgumentNullException();
             var students = ConvertToSet(path);
             var studies = new HashSet<ActiveStudies>();
+
             var itStudents = new ActiveStudies
             {
                 name = "Computer Science",
@@ -36,31 +40,17 @@ namespace Apbd_tut2
             };
             studies.Add(mediaStudents);
 
-            Console.WriteLine(String.Concat("num of students: ", students.Count));
-
-            if (args[2] == "xml")
+            University university = new University
             {
-                var xmlFile = args.Length > 1 ? args[1] : throw new ArgumentNullException();
-                FileStream writer = new FileStream(xmlFile, FileMode.Create);
-                XmlSerializer serializer = new XmlSerializer(typeof(HashSet<Student>), new XmlRootAttribute("university"));
-                serializer.Serialize(writer, students);
-                XmlSerializer studiesSerializer = new XmlSerializer(typeof(HashSet<ActiveStudies>), new XmlRootAttribute("university"));
-                studiesSerializer.Serialize(writer, studies);
-            } else if (args[2] == "json")
-            {
-                var jsonFile = args.Length > 1 ? args[1] : throw new ArgumentNullException();
-                FileStream writer = new FileStream(jsonFile, FileMode.Create);
-                byte[] jsonUtf8Bytes;
-                var options = new JsonSerializerOptions
-                {
-                    WriteIndented = true
-                };
-                jsonUtf8Bytes = JsonSerializer.SerializeToUtf8Bytes(students, options);
-                writer.Write(jsonUtf8Bytes);
+                author = "Artem Rymar",
+                time = DateTime.Now,
+                students = students,
+                ActiveStudies = studies
+            };
 
-                jsonUtf8Bytes = JsonSerializer.SerializeToUtf8Bytes(studies, options);
-                writer.Write(jsonUtf8Bytes);
-            }
+            //         Console.WriteLine(String.Concat("num of students: ", students.Count));
+
+            serialize(destFile,mode,university);
         }
 
         public static HashSet<Student> ConvertToSet(String str)
@@ -134,6 +124,28 @@ namespace Apbd_tut2
             }
 
             return st;
+        }
+        public static void serialize(String destFile, String mode, University university) {
+
+            if (mode == "xml")
+            {
+                var xmlFile = destFile;
+                FileStream writer = new FileStream(xmlFile, FileMode.Create);
+                XmlSerializer serializer = new XmlSerializer(typeof(University), new XmlRootAttribute("university"));
+                serializer.Serialize(writer, university);
+            }
+            else if (mode == "json")
+            {
+                var jsonFile = destFile;
+                FileStream writer = new FileStream(jsonFile, FileMode.Create);
+                byte[] jsonUtf8Bytes;
+                var options = new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                };
+                jsonUtf8Bytes = JsonSerializer.SerializeToUtf8Bytes(university, options);
+                writer.Write(jsonUtf8Bytes);
+            }
         }
     }
 }
